@@ -10,17 +10,15 @@
     "preview": "npx vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "framer-motion": "^11.5.4",
-    "react-router-dom": "^6.26.2",
-    "lucide-react": "^0.441.0",
-    "@supabase/supabase-js": "^2.45.4",
-    "firebase/app": "latest",
-    "firebase/auth": "latest",
-    "firebase/firestore": "latest",
-    "firebase/storage": "latest"
-  },
+  "react": "^18.3.1",
+  "react-dom": "^18.3.1",
+  "framer-motion": "^11.5.4",
+  "react-router-dom": "^6.26.2",
+  "lucide-react": "^0.441.0",
+  "@supabase/supabase-js": "^2.45.4",
+  "firebase": "latest"
+}
+,
   "devDependencies": {
     "@types/node": "^20.11.18",
     "@types/react": "^18.3.1",
