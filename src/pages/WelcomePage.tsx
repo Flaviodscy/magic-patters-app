@@ -1,7 +1,3 @@
-<div style={{background: "#000", color: "#fff", padding: 20}}>DEBUG TEST</div>
-<IOSInstallBanner />
-
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRightIcon, RulerIcon, StarIcon, CheckIcon, SparklesIcon, ShieldCheckIcon, ThumbsUpIcon, BoxIcon } from 'lucide-react';
@@ -15,6 +11,17 @@ function isIOS() {
 function IOSInstallBanner() {
   if (!isIOS()) return null;
   return (
+
+
+  <>
+    <div style={{background: "#000", color: "#fff", padding: 20}}>DEBUG TEST</div>
+    <IOSInstallBanner />
+    <motion.div initial="initial" animate="animate" variants={stagger} className="w-full">
+      {/* ...rest of your content... */}
+    </motion.div>
+  </>
+);
+
     <div style={{
       background: "#f8fafc",
       padding: "18px",
