@@ -1,3 +1,7 @@
+<div style={{background: "#000", color: "#fff", padding: 20}}>DEBUG TEST</div>
+<IOSInstallBanner />
+
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRightIcon, RulerIcon, StarIcon, CheckIcon, SparklesIcon, ShieldCheckIcon, ThumbsUpIcon, BoxIcon } from 'lucide-react';
