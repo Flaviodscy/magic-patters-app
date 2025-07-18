@@ -1,0 +1,1164 @@
+nextMeasurement() {
+                // Clear current measurement visuals
+                document.querySelectorAll('.measurement-point, .measurement-line.current, .measurement-label.current').forEach(el => {
+                    el.remove();
+                });
+                
+                this.currentPoints = [];
+                this.measurementStep++;
+                this.updateProgress();
+                
+                if (this.measurementStep < this.measurementSteps.length) {
+                    this.updateGuide();
+                    document.getElementById('next-measurement').style.display = 'none';
+                    document.getElementById('add-point').style.display = 'block';
+                } else {
+                    // All measurements complete
+                    document.getElementById('next-measurement').style.display = 'none';
+                    document.getElementById('complete-measurements').style.display = 'block';
+                    document.getElementById('visual-<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Pillow Measurement Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: white;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        #app {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #000;
+        }
+
+        #ar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .measurement-point {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            cursor: move;
+            z-index: 10;
+            touch-action: none;
+        }
+
+        .point-inner {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid #007AFF;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .measurement-point.active .point-inner {
+            background: #007AFF;
+            transform: scale(1.3);
+        }
+
+        .measurement-line {
+            position: absolute;
+            background: #FFCC00;
+            height: 3px;
+            transform-origin: left center;
+            pointer-events: none;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .measurement-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: #FFCC00;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 204, 0, 0.3);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #crosshair::before {
+            width: 100%;
+            height: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #crosshair::after {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #measurement-guide {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 25px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 20;
+            text-align: center;
+            border: 2px solid #007AFF;
+        }
+
+        #measurement-guide h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #007AFF;
+        }
+
+        #measurement-guide p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 20;
+        }
+
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn.add {
+            background: #007AFF;
+            color: white;
+        }
+
+        .control-btn.next {
+            background: #34C759;
+            color: white;
+        }
+
+        .control-btn.done {
+            background: #FF9500;
+            color: white;
+        }
+
+        #measurements-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 20;
+            min-width: 200px;
+        }
+
+        #measurements-panel h4 {
+            margin-bottom: 15px;
+            color: #007AFF;
+            font-size: 16px;
+        }
+
+        .measurement-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .measurement-item:last-child {
+            border-bottom: none;
+        }
+
+        .measurement-name {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .measurement-value {
+            color: #FFCC00;
+            font-weight: 600;
+        }
+
+        #permission-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        #permission-overlay h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #007AFF;
+        }
+
+        #start-camera {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-bottom: 30px;
+        }
+
+        .measurement-tips {
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid #34C759;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 400px;
+            text-align: left;
+        }
+
+        .measurement-tips h3 {
+            color: #34C759;
+            margin-bottom: 15px;
+        }
+
+        .measurement-tips ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .visual-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            height: 60%;
+            max-height: 500px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .guide-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .guide-points {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .guide-line {
+            stroke-dasharray: 5, 5;
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: -100; }
+        }
+
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 90;
+        }
+
+        .tutorial-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            color: black;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .tutorial-content h3 {
+            color: #007AFF;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .tutorial-image {
+            width: 100%;
+            height: 200px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tutorial-content button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            z-index: 25;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #007AFF;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .point-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #FFCC00;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 4;
+            animation: indicatorPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes indicatorPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+        }
+
+        .help-button {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #007AFF;
+            border-radius: 50%;
+            color: #007AFF;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #results-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 50;
+            min-width: 300px;
+            display: none;
+            border: 2px solid #007AFF;
+        }
+
+        #results-modal h3 {
+            color: #007AFF;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #results-modal button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .error-message {
+            color: #FF3B30;
+            margin-top: 20px;
+            text-align: center;
+            line-height: 1.5;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <video id="camera-feed" autoplay playsinline muted></video>
+        <canvas id="ar-overlay"></canvas>
+        <div id="crosshair"></div>
+        
+        <!-- Visual Guide Overlay -->
+        <div class="visual-guide" id="visual-guide" style="display: none;">
+            <svg class="guide-svg" id="guide-svg"></svg>
+        </div>
+        
+        <!-- Point Indicators -->
+        <div class="point-indicator" id="point1-indicator" style="display: none;"></div>
+        <div class="point-indicator" id="point2-indicator" style="display: none;"></div>
+        
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+        
+        <!-- Help Button -->
+        <button class="help-button" id="help-button" style="display: none;">?</button>
+        
+        <div id="measurements-panel">
+            <h4>Pillow Measurements</h4>
+            <div class="measurement-item">
+                <span class="measurement-name">Neck Width:</span>
+                <span class="measurement-value" id="neck-value">--</span>
+            </div>
+            <div class="measurement-item">
+                <span class="measurement-name">Shoulder Width:</span>
+                <span class="measurement-value" id="shoulder-value">--</span>
+            </div>
+            <div class="measurement-item">
+                <span class="measurement-name">Neck to Shoulder:</span>
+                <span class="measurement-value" id="length-value">--</span>
+            </div>
+        </div>
+
+        <div id="measurement-guide">
+            <h3 id="guide-title">Step 1: Measure Neck</h3>
+            <p id="guide-text">Place points at each side of your neck</p>
+        </div>
+        
+        <div id="controls">
+            <button class="control-btn add" id="add-point">+</button>
+            <button class="control-btn next" id="next-measurement" style="display: none;">→</button>
+            <button class="control-btn done" id="complete-measurements" style="display: none;">✓</button>
+        </div>
+
+        <div id="results-modal">
+            <h3>Measurements Complete!</h3>
+            <div id="final-measurements"></div>
+            <button onclick="saveMeasurements()">Save to Pillow Finder</button>
+            <button onclick="retakeMeasurements()">Retake</button>
+        </div>
+        
+        <!-- Tutorial Overlay -->
+        <div class="tutorial-overlay" id="tutorial-overlay">
+            <div class="tutorial-content">
+                <h3 id="tutorial-title">Welcome to Pillow Measurements!</h3>
+                <div class="tutorial-image">
+                    <svg width="300" height="200" id="tutorial-svg"></svg>
+                </div>
+                <p id="tutorial-text">Let's measure your body dimensions to find your perfect pillow.</p>
+                <button onclick="nextTutorial()">Next</button>
+            </div>
+        </div>
+        
+        <div id="permission-overlay">
+            <h2>Pillow Measurement Tool</h2>
+            <button id="start-camera">Start Measuring</button>
+            
+            <div class="measurement-tips">
+                <h3>📏 Get Your Perfect Pillow Fit</h3>
+                <p style="margin-bottom: 15px;">We'll guide you through 3 simple measurements:</p>
+                <ul>
+                    <li><strong>Neck Width:</strong> Determines pillow thickness</li>
+                    <li><strong>Shoulder Width:</strong> Helps with firmness selection</li>
+                    <li><strong>Neck to Shoulder:</strong> Ensures proper support height</li>
+                </ul>
+                <p style="margin-top: 15px; font-size: 14px; opacity: 0.8;">
+                    💡 Tip: Ask someone to help for best accuracy!
+                </p>
+            </div>
+            
+            <div class="error-message" id="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+        class PillowMeasurementApp {
+            constructor() {
+                this.video = document.getElementById('camera-feed');
+                this.canvas = document.getElementById('ar-overlay');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Measurement states
+                this.measurementStep = 0;
+                this.measurements = {
+                    neck: null,
+                    shoulders: null,
+                    length: null
+                };
+                
+                this.currentPoints = [];
+                this.pixelsPerCm = 10; // This would be calibrated
+                
+                this.measurementSteps = [
+                    {
+                        name: 'neck',
+                        title: 'Step 1: Measure Neck',
+                        text: 'Place points at each side of your neck',
+                        guide: 'neckGuide',
+                        indicators: [
+                            { x: 35, y: 50 },  // Left side of neck
+                            { x: 65, y: 50 }   // Right side of neck
+                        ]
+                    },
+                    {
+                        name: 'shoulders',
+                        title: 'Step 2: Measure Shoulders',
+                        text: 'Place points at each shoulder',
+                        guide: 'shoulderGuide',
+                        indicators: [
+                            { x: 20, y: 60 },  // Left shoulder
+                            { x: 80, y: 60 }   // Right shoulder
+                        ]
+                    },
+                    {
+                        name: 'length',
+                        title: 'Step 3: Neck to Shoulder',
+                        text: 'Place points from neck base to shoulder',
+                        guide: 'lengthGuide',
+                        indicators: [
+                            { x: 50, y: 55 },  // Neck base
+                            { x: 75, y: 65 }   // Shoulder
+                        ]
+                    }
+                ];
+                
+                this.tutorialStep = 0;
+                this.showTutorial = true;
+                
+                this.init();
+            }
+
+            async init() {
+                document.getElementById('start-camera').addEventListener('click', () => this.startCamera());
+                document.getElementById('add-point').addEventListener('click', () => this.addPoint());
+                document.getElementById('next-measurement').addEventListener('click', () => this.nextMeasurement());
+                document.getElementById('complete-measurements').addEventListener('click', () => this.completeMeasurements());
+                document.getElementById('help-button').addEventListener('click', () => this.showHelp());
+                
+                window.addEventListener('resize', () => this.resizeCanvas());
+                
+                // Initialize tutorial
+                this.initTutorial();
+            }
+
+            initTutorial() {
+                const tutorials = [
+                    {
+                        title: "Welcome to Pillow Measurements!",
+                        text: "We'll help you find your perfect pillow by taking 3 simple body measurements.",
+                        svg: this.drawWelcomeSVG
+                    },
+                    {
+                        title: "How It Works",
+                        text: "Point your camera at yourself (or have someone help). Tap the + button to place measurement points.",
+                        svg: this.drawHowToSVG
+                    },
+                    {
+                        title: "Ready to Start!",
+                        text: "Follow the on-screen guides and we'll walk you through each measurement step by step.",
+                        svg: this.drawReadySVG
+                    }
+                ];
+                
+                window.tutorialData = tutorials;
+                window.currentTutorialStep = 0;
+            }
+
+            async startCamera() {
+                try {
+                    // Hide tutorial if showing
+                    document.getElementById('tutorial-overlay').style.display = 'none';
+                    
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('Camera API not supported');
+                    }
+
+                    const constraints = {
+                        audio: false,
+                        video: {
+                            facingMode: 'user', // Front camera for self-measurement
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    };
+
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.video.srcObject = stream;
+                    
+                    await this.video.play();
+                    
+                    this.video.addEventListener('playing', () => {
+                        document.getElementById('permission-overlay').style.display = 'none';
+                        document.getElementById('help-button').style.display = 'flex';
+                        this.resizeCanvas();
+                        this.updateGuide();
+                        this.updateProgress();
+                        
+                        // Show initial tutorial if first time
+                        if (this.showTutorial) {
+                            setTimeout(() => {
+                                document.getElementById('tutorial-overlay').style.display = 'block';
+                                this.drawTutorialSVG(0);
+                            }, 500);
+                        }
+                    }, { once: true });
+
+                } catch (error) {
+                    console.error('Camera error:', error);
+                    document.getElementById('error-message').textContent = 
+                        'Camera access required. Please allow camera permissions and reload.';
+                }
+            }
+
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            updateGuide() {
+                const step = this.measurementSteps[this.measurementStep];
+                document.getElementById('guide-title').textContent = step.title;
+                document.getElementById('guide-text').textContent = step.text;
+                
+                // Show visual guide
+                this.showVisualGuide(step);
+                
+                // Show point indicators
+                this.showPointIndicators(step);
+            }
+
+            showVisualGuide(step) {
+                const guide = document.getElementById('visual-guide');
+                const svg = document.getElementById('guide-svg');
+                
+                guide.style.display = 'block';
+                
+                // Clear previous content
+                svg.innerHTML = '';
+                
+                // Draw appropriate guide based on step
+                switch(step.name) {
+                    case 'neck':
+                        this.drawNeckGuide(svg);
+                        break;
+                    case 'shoulders':
+                        this.drawShoulderGuide(svg);
+                        break;
+                    case 'length':
+                        this.drawLengthGuide(svg);
+                        break;
+                }
+            }
+
+            drawNeckGuide(svg) {
+                svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="neckGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#007AFF;stop-opacity:0.3" />
+                            <stop offset="50%" style="stop-color:#007AFF;stop-opacity:0.1" />
+                            <stop offset="100%" style="stop-color:#007AFF;stop-opacity:0.3" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Head outline -->
+                    <ellipse cx="50%" cy="30%" rx="80" ry="100" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="5,5"/>
+                    <!-- Neck area -->
+                    <rect x="35%" y="45%" width="30%" height="15%" fill="url(#neckGradient)" rx="10"/>
+                    <!-- Measurement points -->
+                    <circle cx="35%" cy="50%" r="8" fill="#FFCC00" class="guide-points"/>
+                    <circle cx="65%" cy="50%" r="8" fill="#FFCC00" class="guide-points"/>
+                    <!-- Measurement line -->
+                    <line x1="35%" y1="50%" x2="65%" y2="50%" stroke="#FFCC00" stroke-width="2" class="guide-line"/>
+                    <!-- Labels -->
+                    <text x="50%" y="70%" text-anchor="middle" fill="white" font-size="16">Neck Width</text>
+                `;
+            }
+
+            drawShoulderGuide(svg) {
+                svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="shoulderGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#34C759;stop-opacity:0.3" />
+                            <stop offset="50%" style="stop-color:#34C759;stop-opacity:0.1" />
+                            <stop offset="100%" style="stop-color:#34C759;stop-opacity:0.3" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Body outline -->
+                    <path d="M 30% 40% Q 20% 50% 15% 70% L 25% 90% L 75% 90% L 85% 70% Q 80% 50% 70% 40%" 
+                          fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="5,5"/>
+                    <!-- Shoulder area -->
+                    <rect x="15%" y="55%" width="70%" height="10%" fill="url(#shoulderGradient)" rx="20"/>
+                    <!-- Measurement points -->
+                    <circle cx="20%" cy="60%" r="8" fill="#FFCC00" class="guide-points"/>
+                    <circle cx="80%" cy="60%" r="8" fill="#FFCC00" class="guide-points"/>
+                    <!-- Measurement line -->
+                    <line x1="20%" y1="60%" x2="80%" y2="60%" stroke="#FFCC00" stroke-width="2" class="guide-line"/>
+                    <!-- Labels -->
+                    <text x="50%" y="80%" text-anchor="middle" fill="white" font-size="16">Shoulder Width</text>
+                `;
+            }
+
+            drawLengthGuide(svg) {
+                svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="lengthGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#FF9500;stop-opacity:0.3" />
+                            <stop offset="100%" style="stop-color:#FF9500;stop-opacity:0.1" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Side profile -->
+                    <path d="M 40% 30% Q 45% 35% 45% 45% L 45% 55% Q 50% 60% 60% 65% L 65% 70%" 
+                          fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="5,5"/>
+                    <!-- Measurement area -->
+                    <path d="M 45% 50% Q 50% 55% 60% 60% L 65% 65%" 
+                          fill="none" stroke="url(#lengthGradient)" stroke-width="20" stroke-linecap="round" opacity="0.5"/>
+                    <!-- Measurement points -->
+                    <circle cx="50%" cy="55%" r="8" fill="#FFCC00" class="guide-points"/>
+                    <circle cx="75%" cy="65%" r="8" fill="#FFCC00" class="guide-points"/>
+                    <!-- Measurement line -->
+                    <line x1="50%" y1="55%" x2="75%" y2="65%" stroke="#FFCC00" stroke-width="2" class="guide-line"/>
+                    <!-- Labels -->
+                    <text x="50%" y="80%" text-anchor="middle" fill="white" font-size="16">Neck to Shoulder</text>
+                `;
+            }
+
+            showPointIndicators(step) {
+                const ind1 = document.getElementById('point1-indicator');
+                const ind2 = document.getElementById('point2-indicator');
+                
+                if (step.indicators && this.currentPoints.length < 2) {
+                    const viewWidth = window.innerWidth;
+                    const viewHeight = window.innerHeight;
+                    
+                    ind1.style.display = 'block';
+                    ind1.style.left = (viewWidth * step.indicators[0].x / 100) + 'px';
+                    ind1.style.top = (viewHeight * step.indicators[0].y / 100) + 'px';
+                    
+                    ind2.style.display = 'block';
+                    ind2.style.left = (viewWidth * step.indicators[1].x / 100) + 'px';
+                    ind2.style.top = (viewHeight * step.indicators[1].y / 100) + 'px';
+                } else {
+                    ind1.style.display = 'none';
+                    ind2.style.display = 'none';
+                }
+            }
+
+            updateProgress() {
+                const totalSteps = this.measurementSteps.length;
+                const progress = ((this.measurementStep + 1) / totalSteps) * 100;
+                document.getElementById('progress-fill').style.width = progress + '%';
+            }
+
+            showHelp() {
+                document.getElementById('tutorial-overlay').style.display = 'block';
+                this.drawTutorialSVG(0);
+            }
+
+            drawTutorialSVG(step) {
+                const svg = document.getElementById('tutorial-svg');
+                
+                switch(step) {
+                    case 0:
+                        this.drawWelcomeSVG(svg);
+                        break;
+                    case 1:
+                        this.drawHowToSVG(svg);
+                        break;
+                    case 2:
+                        this.drawReadySVG(svg);
+                        break;
+                }
+            }
+
+            drawWelcomeSVG(svg) {
+                svg.innerHTML = `
+                    <rect x="50" y="30" width="200" height="100" fill="#007AFF" rx="10" opacity="0.2"/>
+                    <text x="150" y="70" text-anchor="middle" fill="#007AFF" font-size="24" font-weight="bold">Pillow Finder</text>
+                    <text x="150" y="100" text-anchor="middle" fill="#666" font-size="16">3 Simple Measurements</text>
+                    <circle cx="80" cy="160" r="5" fill="#007AFF"/>
+                    <circle cx="150" cy="160" r="5" fill="#34C759"/>
+                    <circle cx="220" cy="160" r="5" fill="#FF9500"/>
+                `;
+            }
+
+            drawHowToSVG(svg) {
+                svg.innerHTML = `
+                    <rect x="20" y="20" width="260" height="160" fill="none" stroke="#666" stroke-width="2" rx="10" stroke-dasharray="5,5"/>
+                    <circle cx="150" cy="100" r="30" fill="none" stroke="#007AFF" stroke-width="2"/>
+                    <circle cx="100" cy="100" r="5" fill="#FFCC00"/>
+                    <circle cx="200" cy="100" r="5" fill="#FFCC00"/>
+                    <line x1="100" y1="100" x2="200" y2="100" stroke="#FFCC00" stroke-width="2"/>
+                    <text x="150" y="150" text-anchor="middle" fill="#666" font-size="14">Tap + to place points</text>
+                `;
+            }
+
+            drawReadySVG(svg) {
+                svg.innerHTML = `
+                    <circle cx="150" cy="80" r="60" fill="#34C759" opacity="0.2"/>
+                    <path d="M 120 80 L 140 100 L 180 60" stroke="#34C759" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    <text x="150" y="160" text-anchor="middle" fill="#666" font-size="16">Let's get started!</text>
+                `;
+            }
+
+            addPoint() {
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                
+                if (this.currentPoints.length < 2) {
+                    const point = {
+                        x: centerX,
+                        y: centerY,
+                        id: Date.now()
+                    };
+                    
+                    this.currentPoints.push(point);
+                    this.createPointElement(centerX, centerY, point.id);
+                    
+                    if (this.currentPoints.length === 2) {
+                        // Calculate and display measurement
+                        this.calculateCurrentMeasurement();
+                        
+                        // Show next button
+                        document.getElementById('add-point').style.display = 'none';
+                        document.getElementById('next-measurement').style.display = 'block';
+                    }
+                }
+            }
+
+            createPointElement(x, y, id) {
+                const point = document.createElement('div');
+                point.className = 'measurement-point active';
+                point.dataset.pointId = id;
+                point.style.left = x + 'px';
+                point.style.top = y + 'px';
+                point.innerHTML = '<div class="point-inner"></div>';
+                
+                // Make it draggable
+                let isDragging = false;
+                let startX, startY;
+                
+                const handleStart = (e) => {
+                    isDragging = true;
+                    const touch = e.touches ? e.touches[0] : e;
+                    startX = touch.clientX - x;
+                    startY = touch.clientY - y;
+                    e.preventDefault();
+                };
+                
+                const handleMove = (e) => {
+                    if (!isDragging) return;
+                    const touch = e.touches ? e.touches[0] : e;
+                    const newX = touch.clientX - startX;
+                    const newY = touch.clientY - startY;
+                    
+                    point.style.left = newX + 'px';
+                    point.style.top = newY + 'px';
+                    
+                    // Update stored position
+                    const pointData = this.currentPoints.find(p => p.id === id);
+                    if (pointData) {
+                        pointData.x = newX;
+                        pointData.y = newY;
+                        this.calculateCurrentMeasurement();
+                    }
+                    
+                    e.preventDefault();
+                };
+                
+                const handleEnd = () => {
+                    isDragging = false;
+                };
+                
+                point.addEventListener('touchstart', handleStart, { passive: false });
+                point.addEventListener('touchmove', handleMove, { passive: false });
+                point.addEventListener('touchend', handleEnd);
+                point.addEventListener('mousedown', handleStart);
+                window.addEventListener('mousemove', handleMove);
+                window.addEventListener('mouseup', handleEnd);
+                
+                document.getElementById('app').appendChild(point);
+                
+                // Animate in
+                setTimeout(() => {
+                    point.classList.remove('active');
+                }, 500);
+            }
+
+            calculateCurrentMeasurement() {
+                if (this.currentPoints.length !== 2) return;
+                
+                const p1 = this.currentPoints[0];
+                const p2 = this.currentPoints[1];
+                
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Create or update line
+                let line = document.querySelector('.measurement-line.current');
+                if (!line) {
+                    line = document.createElement('div');
+                    line.className = 'measurement-line current';
+                    document.getElementById('app').appendChild(line);
+                }
+                
+                line.style.left = p1.x + 'px';
+                line.style.top = p1.y + 'px';
+                line.style.width = distance + 'px';
+                line.style.transform = `rotate(${Math.atan2(dy, dx) * 180 / Math.PI}deg)`;
+                
+                // Create or update label
+                let label = document.querySelector('.measurement-label.current');
+                if (!label) {
+                    label = document.createElement('div');
+                    label.className = 'measurement-label current';
+                    document.getElementById('app').appendChild(label);
+                }
+                
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+                const cm = (distance / this.pixelsPerCm).toFixed(1);
+                
+                label.textContent = cm + ' cm';
+                label.style.left = midX + 'px';
+                label.style.top = (midY - 30) + 'px';
+                label.style.transform = 'translate(-50%, -50%)';
+                
+                // Store measurement
+                const stepName = this.measurementSteps[this.measurementStep].name;
+                this.measurements[stepName] = parseFloat(cm);
+                
+                // Update display
+                this.updateMeasurementDisplay(stepName, cm);
+            }
+
+            updateMeasurementDisplay(type, value) {
+                const mapping = {
+                    'neck': 'neck-value',
+                    'shoulders': 'shoulder-value',
+                    'length': 'length-value'
+                };
+                
+                const element = document.getElementById(mapping[type]);
+                if (element) {
+                    element.textContent = value + ' cm';
+                }
+            }
+
+            nextMeasurement() {
+                // Clear current measurement visuals
+                document.querySelectorAll('.measurement-point, .measurement-line.current, .measurement-label.current').forEach(el => {
+                    el.remove();
+                });
+                
+                this.currentPoints = [];
+                this.measurementStep++;
+                this.updateProgress();
+                
+                if (this.measurementStep < this.measurementSteps.length) {
+                    this.updateGuide();
+                    document.getElementById('next-measurement').style.display = 'none';
+                    document.getElementById('add-point').style.display = 'block';
+                } else {
+                    // All measurements complete
+                    document.getElementById('next-measurement').style.display = 'none';
+                    document.getElementById('complete-measurements').style.display = 'block';
+                    document.getElementById('visual-guide').style.display = 'none';
+                    document.getElementById('point1-indicator').style.display = 'none';
+                    document.getElementById('point2-indicator').style.display = 'none';
+                }
+            }
+
+            completeMeasurements() {
+                const resultsHtml = `
+                    <div class="measurement-item">
+                        <span class="measurement-name">Neck Width:</span>
+                        <span class="measurement-value">${this.measurements.neck} cm</span>
+                    </div>
+                    <div class="measurement-item">
+                        <span class="measurement-name">Shoulder Width:</span>
+                        <span class="measurement-value">${this.measurements.shoulders} cm</span>
+                    </div>
+                    <div class="measurement-item">
+                        <span class="measurement-name">Neck to Shoulder:</span>
+                        <span class="measurement-value">${this.measurements.length} cm</span>
+                    </div>
+                `;
+                
+                document.getElementById('final-measurements').innerHTML = resultsHtml;
+                document.getElementById('results-modal').style.display = 'block';
+            }
+        }
+
+        // Global functions for tutorial
+        function nextTutorial() {
+            window.currentTutorialStep = (window.currentTutorialStep || 0) + 1;
+            
+            if (window.currentTutorialStep >= window.tutorialData.length) {
+                document.getElementById('tutorial-overlay').style.display = 'none';
+                window.measurementApp.showTutorial = false;
+            } else {
+                const tutorial = window.tutorialData[window.currentTutorialStep];
+                document.getElementById('tutorial-title').textContent = tutorial.title;
+                document.getElementById('tutorial-text').textContent = tutorial.text;
+                window.measurementApp.drawTutorialSVG(window.currentTutorialStep);
+                
+                // Change button text on last step
+                if (window.currentTutorialStep === window.tutorialData.length - 1) {
+                    document.querySelector('#tutorial-overlay button').textContent = 'Start Measuring';
+                }
+            }
+        }
+
+        // Global functions for results modal
+        function saveMeasurements() {
+            const app = window.measurementApp;
+            
+            // Store measurements in localStorage for the pillow app
+            localStorage.setItem('pillowMeasurements', JSON.stringify({
+                neck: app.measurements.neck,
+                shoulders: app.measurements.shoulders,
+                length: app.measurements.length,
+                timestamp: new Date().toISOString()
+            }));
+            
+            // Show success message
+            const resultsModal = document.getElementById('results-modal');
+            resultsModal.innerHTML = `
+                <h3 style="color: #34C759;">✓ Measurements Saved!</h3>
+                <p style="margin: 20px 0;">Your measurements have been saved successfully.</p>
+                <div style="background: rgba(52, 199, 89, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                    <strong>Next Steps:</strong><br>
+                    Return to the Pillow Finder app to see your personalized recommendations based on these measurements.
+                </div>
+                <button onclick="location.reload()" style="background: #007AFF;">Take New Measurements</button>
+            `;
+        }
+
+        function retakeMeasurements() {
+            location.reload();
+        }
+
+        // Initialize the app
+        window.measurementApp = new PillowMeasurementApp();
+    </script>
+</body>
+</html>
